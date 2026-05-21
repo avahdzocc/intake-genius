@@ -29,7 +29,16 @@ logger = logging.getLogger(__name__)
 
 
 def _load_credentials():
-    """Load Google credentials from file. Returns None if not available."""
+    """Load Google credentials from file or env var. Returns None if not available.
+
+    Checks in order:
+    1. GOOGLE_CALENDAR_CREDENTIALS_JSON env var (raw JSON string — for Railway/cloud)
+    2. GOOGLE_CALENDAR_CREDENTIALS_PATH file (service account key — for local/Docker)
+    3. OAuth token.json (development)
+    """
+    import json as _json
+    import os
+
     creds_path = Path(settings.google_calendar_credentials_path)
     token_path = creds_path.parent / "token.json"
 
@@ -40,15 +49,24 @@ def _load_credentials():
 
         scopes = [settings.google_calendar_scopes]
 
-        # Try service account first
+        # 1. Try env var (for Railway / cloud deployments)
+        creds_json = os.environ.get("GOOGLE_CALENDAR_CREDENTIALS_JSON", "")
+        if creds_json:
+            info = _json.loads(creds_json)
+            if info.get("type") == "service_account":
+                return service_account.Credentials.from_service_account_info(
+                    info, scopes=scopes
+                )
+
+        # 2. Try service account file
         if creds_path.exists():
-            info = __import__("json").loads(creds_path.read_text())
+            info = _json.loads(creds_path.read_text())
             if info.get("type") == "service_account":
                 return service_account.Credentials.from_service_account_file(
                     str(creds_path), scopes=scopes
                 )
 
-        # Fall back to OAuth token
+        # 3. Fall back to OAuth token
         if token_path.exists():
             creds = Credentials.from_authorized_user_file(str(token_path), scopes)
             if creds and creds.valid:
