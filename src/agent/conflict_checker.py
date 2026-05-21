@@ -9,7 +9,7 @@ from src.db.queries import search_parties_all
 from src.models.case import Case
 
 _PROMPT_PATH = Path(__file__).parent / "prompts" / "conflict_eval.txt"
-_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key, max_retries=3)
 
 _CONFLICT_EVAL_TOOL = {
     "name": "submit_conflict_evaluation",

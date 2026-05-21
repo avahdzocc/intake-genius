@@ -6,7 +6,7 @@ from src.config import settings
 from src.models.case import Case
 
 _PROMPT_PATH = Path(__file__).parent / "prompts" / "follow_up.txt"
-_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key, max_retries=3)
 
 MAX_FOLLOW_UPS = 3
 

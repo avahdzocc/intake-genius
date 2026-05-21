@@ -6,14 +6,17 @@ from src.config import settings
 from src.models.case import ClassificationResult, CaseUrgency, CaseComplexity
 
 _PROMPT_PATH = Path(__file__).parent / "prompts" / "classifier.txt"
-_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+_client = anthropic.AsyncAnthropic(
+    api_key=settings.anthropic_api_key,
+    max_retries=3,  # Auto-retry on 429/5xx with exponential backoff
+)
 
 
 async def classify_intake(raw_text: str) -> ClassificationResult:
     system_prompt = _PROMPT_PATH.read_text()
 
     response = await _client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-haiku-3-5",  # Fast + high rate limits for structured extraction
         max_tokens=1024,
         system=system_prompt,
         messages=[

@@ -10,7 +10,7 @@ from src.models.case import Case
 
 logger = logging.getLogger(__name__)
 
-_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key, max_retries=3)
 _PROMPT_PATH = Path(__file__).parent / "prompts" / "engagement_letter.txt"
 _PROMPT_TEMPLATE = _PROMPT_PATH.read_text()
 

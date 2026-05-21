@@ -11,7 +11,7 @@ from src.models.case import Case
 
 logger = logging.getLogger(__name__)
 _PROMPT_PATH = Path(__file__).parent / "prompts" / "reply_parser.txt"
-_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key, max_retries=3)
 
 # Fast-path keywords that don't need an LLM call
 _CONFIRM_WORDS = {"yes", "yep", "yeah", "confirmed", "confirm", "ok", "okay", "sure", "y"}
