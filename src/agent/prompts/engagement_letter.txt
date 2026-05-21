@@ -1,0 +1,29 @@
+You are a legal assistant drafting an engagement letter for a law firm.
+
+Write a professional, warm engagement letter using the details provided below.
+The letter should:
+- Be addressed to the client by first name
+- Briefly summarise the legal matter so the client knows you understood them
+- Confirm the firm will represent them and name the assigned attorney (if known)
+- State the proposed consultation date/time (if scheduled)
+- Describe the next steps (what the client should bring or send)
+- Include a brief explanation of attorney-client privilege and confidentiality
+- Close with the firm name and a warm sign-off
+- Be concise (300–450 words), plain English, no legalese
+
+Use this tone: professional but approachable. The client may be stressed.
+
+--- Client Details ---
+Client name: {client_name}
+Case type: {case_type}
+Jurisdiction: {jurisdiction}
+Assigned attorney: {attorney_name}
+Consultation date/time: {consult_datetime}
+Intake summary: {intake_summary}
+Outstanding documents needed: {required_docs}
+
+--- Firm Details ---
+Firm name: {firm_name}
+Intake email: {intake_email}
+
+Output ONLY the letter text, starting with "Dear {first_name}," — no preamble or metadata.

@@ -1,0 +1,142 @@
+{
+  "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "name": "Intake Genius — Stale Case Follow-Up",
+  "nodes": [
+    {
+      "id": "n1-schedule",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n2-get-stale",
+      "name": "GET Stale Cases",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "http://intake-genius:8000/api/internal/cases/stale",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n3-check-empty",
+      "name": "Any Stale Cases?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n4-split",
+      "name": "Split Into Cases",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 200],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// The HTTP GET response arrives as a single item containing the array.\n// Split it so the next node runs once per case.\nconst cases = $input.first().json;\nif (!Array.isArray(cases)) return [];\nreturn cases.map(c => ({ json: c }));"
+      }
+    },
+    {
+      "id": "n5-follow-up",
+      "name": "POST Follow-Up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1200, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://intake-genius:8000/api/intake/{{ $json.id }}/follow-up",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "n6-no-stale",
+      "name": "No Stale Cases",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [960, 420],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {
+      "main": [[{"node": "GET Stale Cases", "type": "main", "index": 0}]]
+    },
+    "GET Stale Cases": {
+      "main": [[{"node": "Any Stale Cases?", "type": "main", "index": 0}]]
+    },
+    "Any Stale Cases?": {
+      "main": [
+        [{"node": "Split Into Cases", "type": "main", "index": 0}],
+        [{"node": "No Stale Cases", "type": "main", "index": 0}]
+      ]
+    },
+    "Split Into Cases": {
+      "main": [[{"node": "POST Follow-Up", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "versionId": "v1-stale-followup",
+  "meta": {
+    "templateId": "intake-genius-v1"
+  },
+  "tags": [{"name": "intake-genius"}],
+  "_setup_notes": [
+    "1. Import and activate — it runs every 6 hours automatically",
+    "2. Test manually: open the workflow → click 'Test workflow' → check execution log",
+    "3. The IF node true-branch fires only when stale cases exist, avoiding empty-loop errors"
+  ]
+}

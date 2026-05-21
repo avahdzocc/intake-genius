@@ -1,0 +1,155 @@
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": "Intake Genius — New Intake Ingestion",
+  "nodes": [
+    {
+      "id": "n1-webhook",
+      "name": "Intake Form Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "w1-intake-new",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "intake-new",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "n2-normalize",
+      "name": "Normalize Intake Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [480, 300],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "client_name",
+              "value": "={{ $json.body.client_name ?? $json.client_name ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "client_email",
+              "value": "={{ $json.body.client_email ?? $json.client_email ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "client_phone",
+              "value": "={{ $json.body.client_phone ?? $json.client_phone ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "description",
+              "value": "={{ $json.body.description ?? $json.description ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "intake_source",
+              "value": "={{ $json.body.intake_source ?? 'web_form' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n3-post-agent",
+      "name": "POST to Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [720, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://intake-genius:8000/api/intake/new",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ client_name: $json.client_name, client_email: $json.client_email, client_phone: $json.client_phone, description: $json.description, intake_source: $json.intake_source }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n4-respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ case_id: $json.case_id, status: $json.status, message: 'Your intake has been received. We will be in touch shortly.' }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {"name": "Content-Type", "value": "application/json"},
+              {"name": "Access-Control-Allow-Origin", "value": "*"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "n5-error",
+      "name": "On Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 480],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"error\": \"Intake submission failed. Please try again or call our office.\" }",
+        "options": {
+          "responseCode": 500
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Intake Form Webhook": {
+      "main": [[{"node": "Normalize Intake Data", "type": "main", "index": 0}]]
+    },
+    "Normalize Intake Data": {
+      "main": [[{"node": "POST to Agent", "type": "main", "index": 0}]]
+    },
+    "POST to Agent": {
+      "main": [[{"node": "Respond to Webhook", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "versionId": "v1-intake-ingestion",
+  "meta": {
+    "templateId": "intake-genius-v1"
+  },
+  "tags": [{"name": "intake-genius"}],
+  "_setup_notes": [
+    "1. Import this file into n8n: Workflows → Import from File",
+    "2. If running locally (not Docker), change 'http://intake-genius:8000' to 'http://host.docker.internal:8000'",
+    "3. Activate the workflow",
+    "4. Your webhook URL will be: http://localhost:5678/webhook/intake-new",
+    "5. Update the intake form action to point to that webhook URL"
+  ]
+}

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intake Genius — Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f7;
+      --surface: #fff;
+      --border: #e0e0e5;
+      --primary: #1a56db;
+      --primary-hover: #1346c0;
+      --text: #1c1c1e;
+      --muted: #6b6b72;
+      --radius: 10px;
+      --shadow: 0 1px 4px rgba(0,0,0,.08);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+      /* status colours */
+      --c-new: #6366f1;
+      --c-classifying: #8b5cf6;
+      --c-conflict_check: #f59e0b;
+      --c-routing: #3b82f6;
+      --c-scheduling: #06b6d4;
+      --c-awaiting_docs: #f97316;
+      --c-intake_complete: #10b981;
+      --c-conflict_flagged: #ef4444;
+      --c-rejected: #6b7280;
+      --c-blocked: #991b1b;
+    }
+
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .logo { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .logo span { font-size: 1.2rem; }
+    .firm-name { color: var(--muted); font-size: .85rem; }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .shell { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 56px); }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    aside {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      overflow-y: auto;
+    }
+    .sidebar-section-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 12px 16px 6px;
+    }
+    .filter-btn {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: 8px 16px;
+      font-size: .88rem;
+      cursor: pointer;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background .15s;
+    }
+    .filter-btn:hover { background: var(--bg); }
+    .filter-btn.active { background: #eff6ff; color: var(--primary); font-weight: 600; }
+    .badge {
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: var(--bg);
+      color: var(--muted);
+    }
+    .filter-btn.active .badge { background: var(--primary); color: #fff; }
+
+    .sidebar-stats {
+      margin: 16px;
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 12px;
+      font-size: .82rem;
+      color: var(--muted);
+    }
+    .sidebar-stats b { color: var(--text); font-size: 1.15rem; display: block; }
+
+    /* ── Main ─────────────────────────────────────────────────── */
+    main { padding: 24px; overflow: auto; }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .9rem;
+      outline: none;
+      background: var(--surface);
+    }
+    .search-bar input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,.12); }
+
+    /* ── Case table ─────────────────────────────────────────── */
+    .case-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .case-table th {
+      text-align: left;
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      background: #fafafa;
+    }
+    .case-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: .88rem; vertical-align: middle; }
+    .case-table tr:last-child td { border-bottom: none; }
+    .case-table tr { cursor: pointer; transition: background .12s; }
+    .case-table tr:hover td { background: #f0f7ff; }
+
+    .status-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #fff;
+    }
+    .status-NEW           { background: var(--c-new); }
+    .status-CLASSIFYING   { background: var(--c-classifying); }
+    .status-CONFLICT_CHECK { background: var(--c-conflict_check); }
+    .status-ROUTING       { background: var(--c-routing); }
+    .status-SCHEDULING    { background: var(--c-scheduling); }
+    .status-AWAITING_DOCS { background: var(--c-awaiting_docs); }
+    .status-INTAKE_COMPLETE { background: var(--c-intake_complete); }
+    .status-CONFLICT_FLAGGED { background: var(--c-conflict_flagged); }
+    .status-REJECTED      { background: var(--c-rejected); }
+    .status-BLOCKED       { background: var(--c-blocked); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+    /* ── Detail panel ─────────────────────────────────────────── */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.35);
+      z-index: 200;
+    }
+    .overlay.open { display: block; }
+
+    .detail-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: min(680px, 95vw);
+      background: var(--surface);
+      box-shadow: -4px 0 24px rgba(0,0,0,.12);
+      z-index: 201;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .25s ease;
+    }
+    .detail-panel.open { transform: translateX(0); }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .panel-header h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+    .panel-close {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 4px;
+      line-height: 1;
+      margin-top: -2px;
+    }
+    .panel-close:hover { color: var(--text); }
+
+    .panel-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: .88rem;
+      font-weight: 500;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    .panel-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .info-item label { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 2px; }
+    .info-item p { font-size: .9rem; }
+
+    .section-title { font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 20px 0 10px; }
+
+    /* Audit log timeline */
+    .audit-entry {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: .83rem;
+    }
+    .audit-dot {
+      width: 8px; height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .audit-meta { color: var(--muted); font-size: .75rem; margin-bottom: 2px; }
+    .audit-content b { font-size: .85rem; }
+    .audit-reasoning { color: var(--muted); margin-top: 2px; }
+
+    /* Agent Activity feed */
+    .activity-feed { display: flex; flex-direction: column; gap: 0; position: relative; }
+    .activity-feed::before {
+      content: '';
+      position: absolute;
+      left: 17px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--border);
+    }
+    .activity-item {
+      display: flex;
+      gap: 14px;
+      padding: 12px 0;
+      position: relative;
+    }
+    .activity-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      z-index: 1;
+      border: 2px solid var(--surface);
+    }
+    .activity-icon.sms { background: #dbeafe; }
+    .activity-icon.calendar { background: #d1fae5; }
+    .activity-icon.conflict { background: #fee2e2; }
+    .activity-icon.classification { background: #e9d5ff; }
+    .activity-icon.task { background: #fef3c7; }
+    .activity-icon.document { background: #e0e7ff; }
+    .activity-icon.agent { background: #f3f4f6; }
+    .activity-body { flex: 1; min-width: 0; }
+    .activity-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+    .activity-label.sms { color: #2563eb; }
+    .activity-label.calendar { color: #059669; }
+    .activity-label.conflict { color: #dc2626; }
+    .activity-label.classification { color: #7c3aed; }
+    .activity-label.task { color: #d97706; }
+    .activity-label.document { color: #4f46e5; }
+    .activity-label.agent { color: var(--muted); }
+    .activity-reasoning { font-size: .86rem; line-height: 1.5; color: var(--text); }
+    .activity-time { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+
+    /* Docs */
+    .doc-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      margin-bottom: 6px;
+      font-size: .86rem;
+    }
+    .doc-received { color: #10b981; font-weight: 600; }
+    .doc-pending { color: var(--muted); }
+
+    /* Engagement letter */
+    .letter-box {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      font-size: .88rem;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      font-family: Georgia, serif;
+    }
+    .letter-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background .15s, opacity .15s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: var(--bg); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid #ccc;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div style="background:#fffbeb;border-bottom:1.5px solid #fcd34d;padding:8px 24px;font-size:.82rem;color:#92400e;text-align:center;line-height:1.5;">
+  <strong>Demo Mode</strong> — Submit a test intake at <a href="/" style="color:#92400e;font-weight:600;text-decoration:underline;">the intake form</a> to see the AI agent pipeline in action.
+</div>
+
+<header>
+  <div class="logo"><span>⚖️</span> Intake Genius <span class="firm-name" id="firm-name"></span></div>
+  <a href="/" style="font-size:.85rem; color:var(--primary); text-decoration:none;">← Intake Form</a>
+</header>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-stats">
+      <b id="stat-total">—</b> total cases
+      <div style="margin-top:6px" id="stat-week"></div>
+    </div>
+
+    <div class="sidebar-section-label">Filter by status</div>
+    <button class="filter-btn active" data-status="" onclick="setFilter(this)">
+      All cases <span class="badge" id="badge-all">—</span>
+    </button>
+    <button class="filter-btn" data-status="NEW" onclick="setFilter(this)">New <span class="badge" id="badge-NEW">—</span></button>
+    <button class="filter-btn" data-status="SCHEDULING" onclick="setFilter(this)">Scheduling <span class="badge" id="badge-SCHEDULING">—</span></button>
+    <button class="filter-btn" data-status="AWAITING_DOCS" onclick="setFilter(this)">Awaiting Docs <span class="badge" id="badge-AWAITING_DOCS">—</span></button>
+    <button class="filter-btn" data-status="CONFLICT_FLAGGED" onclick="setFilter(this)">⚠️ Conflict <span class="badge" id="badge-CONFLICT_FLAGGED">—</span></button>
+    <button class="filter-btn" data-status="INTAKE_COMPLETE" onclick="setFilter(this)">Complete <span class="badge" id="badge-INTAKE_COMPLETE">—</span></button>
+    <button class="filter-btn" data-status="REJECTED" onclick="setFilter(this)">Rejected <span class="badge" id="badge-REJECTED">—</span></button>
+    <button class="filter-btn" data-status="BLOCKED" onclick="setFilter(this)">Blocked <span class="badge" id="badge-BLOCKED">—</span></button>
+  </aside>
+
+  <!-- Main -->
+  <main>
+    <div class="search-bar">
+      <input type="search" id="search" placeholder="Search by client name, case type, or ID…" oninput="renderTable()">
+    </div>
+
+    <table class="case-table">
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Urgency</th>
+          <th>Attorney</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody id="case-tbody">
+        <tr><td colspan="6"><div class="empty-state"><div class="spinner"></div></div></td></tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <div>
+      <h2 id="panel-title">Case Detail</h2>
+      <span id="panel-status-pill" class="status-pill"></span>
+    </div>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-tabs">
+    <button class="tab-btn active" onclick="showTab('overview', this)">Overview</button>
+    <button class="tab-btn" onclick="showTab('activity', this)">Agent Activity</button>
+    <button class="tab-btn" onclick="showTab('audit', this)">Audit Log</button>
+    <button class="tab-btn" onclick="showTab('docs', this)">Documents</button>
+    <button class="tab-btn" onclick="showTab('letter', this)">Engagement Letter</button>
+  </div>
+  <div class="panel-body" id="panel-body">
+    <div class="empty-state"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<script>
+  const API = '/admin/api';
+  let allCases = [];
+  let currentFilter = '';
+  let currentCase = null;
+  let currentTab = 'overview';
+
+  // ── Boot ────────────────────────────────────────────────────
+  async function boot() {
+    await Promise.all([loadStats(), loadCases()]);
+  }
+
+  async function loadStats() {
+    try {
+      const s = await apiFetch(`${API}/stats`);
+      document.getElementById('firm-name').textContent = '— ' + s.firm_name;
+      document.getElementById('stat-total').textContent = s.total_cases;
+      document.getElementById('stat-week').textContent = `${s.audit_entries_7d} agent actions (7d)`;
+      document.getElementById('badge-all').textContent = s.total_cases;
+      const statuses = ['NEW','SCHEDULING','AWAITING_DOCS','CONFLICT_FLAGGED','INTAKE_COMPLETE','REJECTED','BLOCKED'];
+      statuses.forEach(st => {
+        const el = document.getElementById('badge-' + st);
+        if (el) el.textContent = (s.by_status[st] || 0);
+      });
+    } catch(e) { console.error(e); }
+  }
+
+  async function loadCases() {
+    try {
+      allCases = await apiFetch(`${API}/cases?limit=200`);
+      renderTable();
+    } catch(e) {
+      document.getElementById('case-tbody').innerHTML =
+        `<tr><td colspan="6"><div class="empty-state"><div class="icon">⚠️</div>Failed to load cases</div></td></tr>`;
+    }
+  }
+
+  // ── Filter / search ─────────────────────────────────────────
+  function setFilter(btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.status;
+    renderTable();
+  }
+
+  function renderTable() {
+    const q = (document.getElementById('search').value || '').toLowerCase().trim();
+    const rows = allCases.filter(c => {
+      if (currentFilter && c.status !== currentFilter) return false;
+      if (!q) return true;
+      return (c.client_name || '').toLowerCase().includes(q) ||
+             (c.case_type || '').toLowerCase().includes(q) ||
+             (c.id || '').toLowerCase().includes(q);
+    });
+
+    if (!rows.length) {
+      document.getElementById('case-tbody').innerHTML =
+        `<tr><td colspan="6"><div class="empty-state"><div class="icon">📂</div>No cases found</div></td></tr>`;
+      return;
+    }
+
+    document.getElementById('case-tbody').innerHTML = rows.map(c => `
+      <tr onclick="openCase('${c.id}')">
+        <td><strong>${esc(c.client_name || '—')}</strong><br><small style="color:var(--muted)">${c.id.slice(0,8).toUpperCase()}</small></td>
+        <td>${esc((c.case_type || 'unknown').replace(/_/g,' '))}</td>
+        <td><span class="status-pill status-${c.status}">${c.status.replace(/_/g,' ')}</span></td>
+        <td style="text-transform:capitalize">${esc(c.urgency || '—')}</td>
+        <td>${esc(c.assigned_attorney_id ? '✓ Assigned' : '—')}</td>
+        <td style="color:var(--muted);font-size:.8rem">${relativeTime(c.updated_at)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Detail panel ─────────────────────────────────────────────
+  async function openCase(id) {
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('detail-panel').classList.add('open');
+    document.getElementById('panel-body').innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+    document.getElementById('panel-title').textContent = 'Loading…';
+
+    try {
+      currentCase = await apiFetch(`${API}/cases/${id}`);
+      renderPanel(currentTab);
+    } catch(e) {
+      document.getElementById('panel-body').innerHTML = '<div class="empty-state">Failed to load case detail.</div>';
+    }
+  }
+
+  function closePanel() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('detail-panel').classList.remove('open');
+  }
+
+  function showTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (currentCase) renderPanel(tab);
+  }
+
+  function renderPanel(tab) {
+    const { case: c, audit_log, missing_documents, engagement_letter } = currentCase;
+    const pill = document.getElementById('panel-status-pill');
+    document.getElementById('panel-title').textContent = c.client_name || 'Unknown Client';
+    pill.className = `status-pill status-${c.status}`;
+    pill.textContent = c.status.replace(/_/g, ' ');
+
+    if (tab === 'overview') renderOverview(c);
+    else if (tab === 'activity') renderActivity(c.id);
+    else if (tab === 'audit') renderAudit(audit_log);
+    else if (tab === 'docs') renderDocs(missing_documents, c);
+    else if (tab === 'letter') renderLetter(engagement_letter, c.id);
+  }
+
+  function renderOverview(c) {
+    document.getElementById('panel-body').innerHTML = `
+      <div class="info-grid">
+        <div class="info-item"><label>Phone</label><p>${esc(c.client_phone || '—')}</p></div>
+        <div class="info-item"><label>Email</label><p>${esc(c.client_email || '—')}</p></div>
+        <div class="info-item"><label>Case Type</label><p style="text-transform:capitalize">${esc((c.case_type||'—').replace(/_/g,' '))}</p></div>
+        <div class="info-item"><label>Jurisdiction</label><p>${esc(c.jurisdiction || '—')}</p></div>
+        <div class="info-item"><label>Urgency</label><p style="text-transform:capitalize">${esc(c.urgency || '—')}</p></div>
+        <div class="info-item"><label>Complexity</label><p style="text-transform:capitalize">${esc(c.complexity || '—')}</p></div>
+        <div class="info-item"><label>Consultation</label><p>${c.consult_datetime ? new Date(c.consult_datetime).toLocaleString() : '—'}</p></div>
+        <div class="info-item"><label>Created</label><p>${new Date(c.created_at).toLocaleString()}</p></div>
+        <div class="info-item"><label>Follow-up count</label><p>${c.follow_up_count ?? 0}</p></div>
+        <div class="info-item"><label>Intake source</label><p style="text-transform:capitalize">${esc(c.intake_source || '—')}</p></div>
+      </div>
+      <div class="section-title">Intake summary</div>
+      <p style="font-size:.88rem;line-height:1.6;white-space:pre-wrap">${esc(c.raw_intake_text || 'No summary.')}</p>
+    `;
+  }
+
+  const ACTIVITY_ICONS = {
+    sms: '💬', calendar: '📅', conflict: '🛡️',
+    classification: '🏷️', task: '📋', document: '📄', agent: '🤖'
+  };
+  const ACTIVITY_LABELS = {
+    sms: 'SMS Communication', calendar: 'Calendar Event', conflict: 'Conflict Check',
+    classification: 'AI Classification', task: 'Task Created', document: 'Document Update', agent: 'Agent Action'
+  };
+
+  async function renderActivity(caseId) {
+    document.getElementById('panel-body').innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+    try {
+      const data = await apiFetch(`${API}/cases/${caseId}/activity`);
+      if (!data.entries.length) {
+        document.getElementById('panel-body').innerHTML = '<div class="empty-state"><div class="icon">🤖</div>No agent activity yet.<br><small>Submit an intake to see the AI pipeline in action.</small></div>';
+        return;
+      }
+      document.getElementById('panel-body').innerHTML = `
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">${data.entries.length} agent actions — showing what the AI decided at each step</p>
+        <div class="activity-feed">
+          ${data.entries.map(e => `
+            <div class="activity-item">
+              <div class="activity-icon ${e.activity_type}">${ACTIVITY_ICONS[e.activity_type] || '🤖'}</div>
+              <div class="activity-body">
+                <div class="activity-label ${e.activity_type}">${ACTIVITY_LABELS[e.activity_type] || 'Agent Action'}</div>
+                <div class="activity-reasoning">${esc(e.agent_reasoning)}</div>
+                <div class="activity-time">${new Date(e.timestamp).toLocaleString()} · ${esc(e.action_result)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } catch(e) {
+      document.getElementById('panel-body').innerHTML = '<div class="empty-state">Failed to load activity.</div>';
+    }
+  }
+
+  function renderAudit(entries) {
+    if (!entries.length) {
+      document.getElementById('panel-body').innerHTML = '<div class="empty-state"><div class="icon">📋</div>No audit entries yet.</div>';
+      return;
+    }
+    document.getElementById('panel-body').innerHTML = entries.map(e => `
+      <div class="audit-entry">
+        <div class="audit-dot"></div>
+        <div class="audit-content">
+          <div class="audit-meta">${new Date(e.timestamp).toLocaleString()} · <code style="font-size:.75rem">${esc(e.action_taken)}</code></div>
+          <b>${esc(e.agent_observation)}</b>
+          <div class="audit-reasoning">${esc(e.agent_reasoning)}</div>
+          <div style="margin-top:3px;font-size:.78rem;color:var(--muted)">Result: ${esc(e.action_result)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderDocs(docs, c) {
+    if (!docs.length) {
+      document.getElementById('panel-body').innerHTML = '<div class="empty-state"><div class="icon">📄</div>No documents requested yet.</div>';
+      return;
+    }
+    const outstanding = docs.filter(d => !d.received_at).length;
+    document.getElementById('panel-body').innerHTML = `
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">${outstanding} outstanding · ${docs.length - outstanding} received</p>
+      ${docs.map(d => `
+        <div class="doc-row">
+          <span style="text-transform:capitalize">${esc(d.document_type.replace(/_/g,' '))}</span>
+          ${d.received_at
+            ? `<span class="doc-received">✓ Received ${relativeTime(d.received_at)}</span>`
+            : `<span class="doc-pending">Pending (requested ${relativeTime(d.requested_at)})</span>`}
+        </div>
+      `).join('')}
+    `;
+  }
+
+  function renderLetter(letter, caseId) {
+    const actions = `
+      <div class="letter-actions">
+        <button class="btn btn-primary" id="gen-btn" onclick="generateLetter('${caseId}')">
+          ${letter ? 'Regenerate' : 'Generate letter'}
+        </button>
+        ${letter ? `<button class="btn btn-outline" onclick="copyLetter()">Copy</button>
+        <button class="btn btn-outline" onclick="downloadLetter('${caseId}')">Download .txt</button>` : ''}
+      </div>
+    `;
+    const content = letter
+      ? `<div class="letter-box" id="letter-content">${esc(letter)}</div>`
+      : `<div class="empty-state"><div class="icon">📝</div>No engagement letter generated yet.<br><small>Click "Generate letter" above.</small></div>`;
+    document.getElementById('panel-body').innerHTML = actions + content;
+  }
+
+  async function generateLetter(caseId) {
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Generating…';
+    try {
+      const res = await fetch(`/api/intake/${caseId}/engagement-letter?regenerate=true`);
+      const text = await res.text();
+      currentCase.engagement_letter = text;
+      renderLetter(text, caseId);
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = 'Try again';
+    }
+  }
+
+  function copyLetter() {
+    const el = document.getElementById('letter-content');
+    if (el) navigator.clipboard.writeText(el.textContent).then(() => alert('Copied!'));
+  }
+
+  function downloadLetter(caseId) {
+    const el = document.getElementById('letter-content');
+    if (!el) return;
+    const blob = new Blob([el.textContent], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `engagement-letter-${caseId.slice(0,8)}.txt`;
+    a.click();
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────
+  async function apiFetch(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+
+  function esc(s) {
+    return String(s ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function relativeTime(iso) {
+    if (!iso) return '—';
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  boot();
+</script>
+</body>
+</html>

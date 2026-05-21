@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": "clear_conflict",
+    "new_case": {
+      "client_name": "Jamie Torres",
+      "case_type": "family_law",
+      "raw_intake_text": "I need help with a divorce. My spouse is Morgan Ellis."
+    },
+    "existing_parties": [
+      {
+        "party_name": "Morgan L. Ellis",
+        "party_role": "client",
+        "case_id": "E-2024-0312"
+      }
+    ],
+    "expected_status": "CONFLICT_FLAGGED"
+  },
+  {
+    "scenario": "same_last_name_different_person",
+    "new_case": {
+      "client_name": "Robert Smith",
+      "case_type": "personal_injury",
+      "raw_intake_text": "I was in a car accident in San Diego."
+    },
+    "existing_parties": [
+      {
+        "party_name": "Janet Smith",
+        "party_role": "client",
+        "case_id": "PI-2024-0100"
+      }
+    ],
+    "expected_status": "CLEAR"
+  },
+  {
+    "scenario": "no_matches",
+    "new_case": {
+      "client_name": "Unique Novak",
+      "case_type": "immigration",
+      "raw_intake_text": "I need help with my visa renewal."
+    },
+    "existing_parties": [],
+    "expected_status": "CLEAR"
+  }
+]

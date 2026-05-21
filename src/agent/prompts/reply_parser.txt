@@ -1,0 +1,12 @@
+You are parsing a client's SMS reply in the context of a legal intake process. Given the reply text and the current case context, determine the intent and extract any relevant information.
+
+Possible intents:
+- CONFIRM: client is confirming an appointment or action ("yes", "confirmed", "that works")
+- CANCEL: client wants to cancel ("no", "cancel", "I changed my mind")
+- PROVIDE_INFO: client is providing requested information (documents, dates, etc.)
+- ASK_QUESTION: client has a question that needs answering
+- UNKNOWN: cannot determine intent
+
+Also extract any specific information provided (dates, document availability, etc.).
+
+Return a JSON object with: intent, extracted_info (dict), suggested_response (if a question was asked).

@@ -1,0 +1,47 @@
+services:
+  intake-genius:
+    build: .
+    container_name: intake-genius
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: /app/data/intake_genius.db
+      BASE_URL: http://localhost:8000
+    volumes:
+      - intake_data:/app/data
+      - ./credentials:/app/credentials:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/internal/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: intake-genius-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      # In n8n workflows, reach FastAPI via service name:  http://intake-genius:8000
+      GENERIC_TIMEZONE: America/Los_Angeles
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: intake-genius-admin
+      # Webhook base URL (update to your public domain in production)
+      WEBHOOK_URL: http://localhost:5678
+      N8N_LOG_LEVEL: info
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Pre-load workflow JSONs so they are available at first launch
+      - ./n8n-workflows:/home/node/intake-genius-workflows:ro
+    depends_on:
+      intake-genius:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  intake_data:
+  n8n_data:

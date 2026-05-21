@@ -1,0 +1,37 @@
+[
+  {
+    "id": "fixture-001",
+    "description": "I was rear-ended on the 405 freeway in Los Angeles last Tuesday. The other driver admitted fault at the scene. I have neck and back pain and my car needs $8,000 in repairs. The other driver's insurance is offering me $2,000 to settle.",
+    "expected_case_type": "personal_injury",
+    "expected_urgency": "standard",
+    "expected_complexity": "moderate"
+  },
+  {
+    "id": "fixture-002",
+    "description": "My husband hit me last night and I need a restraining order immediately. We have two children and I'm afraid for our safety. We are in San Diego.",
+    "expected_case_type": "family_law",
+    "expected_urgency": "emergency",
+    "expected_complexity": "moderate"
+  },
+  {
+    "id": "fixture-003",
+    "description": "I was fired from my job at a tech company in San Francisco after I reported harassment to HR. I believe it was retaliation. I have emails that prove the timeline.",
+    "expected_case_type": "employment",
+    "expected_urgency": "time_sensitive",
+    "expected_complexity": "moderate"
+  },
+  {
+    "id": "fixture-004",
+    "description": "I want to update my will and set up a trust for my grandchildren. I own property in California and Arizona.",
+    "expected_case_type": "estate_planning",
+    "expected_urgency": "standard",
+    "expected_complexity": "moderate"
+  },
+  {
+    "id": "fixture-005",
+    "description": "I received a DUI last weekend in Sacramento. My court date is in three weeks. This is my first offense.",
+    "expected_case_type": "criminal_defense",
+    "expected_urgency": "time_sensitive",
+    "expected_complexity": "simple"
+  }
+]

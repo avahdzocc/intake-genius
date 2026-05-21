@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+.eggs/
+
+# Environment
+.env
+.env.local
+
+# Database
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credentials
+credentials/
+
+# Test/cache
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# n8n data (if running locally)
+n8n-data/
