@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -15,13 +17,44 @@ from src.api.admin import router as admin_router
 from src.middleware.security_headers import SecurityHeadersMiddleware
 from src.middleware.rate_limit import RateLimitMiddleware
 
+logger = logging.getLogger(__name__)
 _STATIC_DIR = Path(__file__).parent / "static"
+
+# Interval in seconds between stale-case sweeps (default: 6 hours)
+_FOLLOW_UP_INTERVAL = settings.follow_up_interval_seconds
+
+
+async def _stale_case_cron() -> None:
+    """Background task: periodically check for stale cases and trigger follow-ups.
+
+    Replaces the n8n stale-case-followup workflow with a built-in cron.
+    """
+    from src.db.queries import get_stale_cases
+    from src.agent.orchestrator import run_follow_up
+
+    while True:
+        await asyncio.sleep(_FOLLOW_UP_INTERVAL)
+        try:
+            stale = await get_stale_cases(hours=48)
+            if stale:
+                logger.info("Stale case cron: found %d stale cases", len(stale))
+            for case in stale:
+                try:
+                    await run_follow_up(case.id)
+                    logger.info("Follow-up triggered for case %s", case.id)
+                except Exception as exc:
+                    logger.error("Follow-up failed for case %s: %s", case.id, exc)
+        except Exception as exc:
+            logger.error("Stale case cron error: %s", exc)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    # Start the stale-case follow-up cron as a background task
+    cron_task = asyncio.create_task(_stale_case_cron())
     yield
+    cron_task.cancel()
 
 
 app = FastAPI(title="Intake Genius", version="0.4.0", lifespan=lifespan)

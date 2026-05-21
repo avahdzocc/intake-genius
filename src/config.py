@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     business_hours_end: int = 17        # 5 PM local
     consultation_duration_minutes: int = 60
     timezone: str = "America/Los_Angeles"
+    follow_up_interval_seconds: int = 21600  # 6 hours between stale-case sweeps
 
 
 settings = Settings()
