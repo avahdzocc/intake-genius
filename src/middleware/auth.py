@@ -12,6 +12,7 @@ from src.config import settings
 _PUBLIC_PATHS = frozenset({
     "/",
     "/form",
+    "/admin",
     "/api/intake/new",
     "/api/internal/health",
     "/docs",
@@ -21,6 +22,7 @@ _PUBLIC_PATHS = frozenset({
 _PUBLIC_PREFIXES = (
     "/static/",
     "/webhooks/",
+    "/admin/",
 )
 
 
