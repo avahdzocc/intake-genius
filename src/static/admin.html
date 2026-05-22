@@ -469,9 +469,42 @@
   let currentCase = null;
   let currentTab = 'overview';
 
+  function getToken() { return sessionStorage.getItem('admin_token') || ''; }
+
+  function showLoginPrompt() {
+    document.getElementById('panel-body').innerHTML = `
+      <div class="empty-state" style="max-width:340px;margin:60px auto;text-align:left;">
+        <div style="font-weight:500;margin-bottom:12px;">Admin Authentication</div>
+        <input id="token-input" type="password" placeholder="Enter API key"
+          style="width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border-strong);border-radius:var(--radius);font-family:var(--font-mono);margin-bottom:10px;background:var(--surface-panel);">
+        <button onclick="submitToken()" style="padding:6px 16px;font-size:12px;cursor:pointer;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--primary);color:var(--bg);font-family:var(--font);">Sign in</button>
+        <div id="login-error" style="color:var(--accent-red);font-size:12px;margin-top:8px;display:none;">Invalid key. Try again.</div>
+      </div>`;
+    const inp = document.getElementById('token-input');
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') submitToken(); });
+    inp.focus();
+  }
+
+  async function submitToken() {
+    const token = document.getElementById('token-input').value.trim();
+    if (!token) return;
+    sessionStorage.setItem('admin_token', token);
+    try {
+      await apiFetch(`${API}/stats`);
+      boot();
+    } catch {
+      sessionStorage.removeItem('admin_token');
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
   // ── Boot ────────────────────────────────────────────────────
   async function boot() {
-    await Promise.all([loadStats(), loadCases()]);
+    try {
+      await Promise.all([loadStats(), loadCases()]);
+    } catch {
+      showLoginPrompt();
+    }
   }
 
   async function loadStats() {
@@ -690,7 +723,11 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Generating…';
     try {
-      const res = await fetch(`/api/intake/${caseId}/engagement-letter?regenerate=true`);
+      const headers = {};
+      const token = getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`/api/intake/${caseId}/engagement-letter?regenerate=true`, { headers });
+      if (res.status === 401) { showLoginPrompt(); return; }
       const text = await res.text();
       currentCase.engagement_letter = text;
       renderLetter(text, caseId);
@@ -717,7 +754,11 @@
 
   // ── Helpers ─────────────────────────────────────────────────
   async function apiFetch(url) {
-    const r = await fetch(url);
+    const headers = {};
+    const token = getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const r = await fetch(url, { headers });
+    if (r.status === 401) { showLoginPrompt(); throw new Error('Unauthorized'); }
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   }
