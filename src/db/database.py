@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 import aiosqlite
@@ -99,10 +100,16 @@ async def init_db() -> None:
                 pass  # column already exists
         await db.commit()
 
-        # Auto-seed attorneys on first run (empty table)
+        # Auto-seed on first run (empty tables)
         async with db.execute("SELECT COUNT(*) FROM attorneys") as cur:
             row = await cur.fetchone()
             if row and row[0] == 0:
                 from src.db.seed import seed_attorneys
-
                 await seed_attorneys(db)
+
+        if os.environ.get("SEED_DEMO_DATA", "").lower() in ("1", "true", "yes"):
+            async with db.execute("SELECT COUNT(*) FROM cases") as cur:
+                row = await cur.fetchone()
+                if row and row[0] == 0:
+                    from src.db.seed import seed_demo_cases
+                    await seed_demo_cases(db)

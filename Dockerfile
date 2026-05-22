@@ -13,6 +13,7 @@ RUN mkdir -p /app/data /app/credentials
 
 ENV DATABASE_URL=/app/data/intake_genius.db
 ENV PYTHONUNBUFFERED=1
+ENV SEED_DEMO_DATA=true
 
 EXPOSE 8000
 
