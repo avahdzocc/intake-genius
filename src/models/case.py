@@ -85,4 +85,7 @@ class IntakeRequest(BaseModel):
     client_email: Optional[str] = None
     client_phone: Optional[str] = None
     description: str
+    matter_type: Optional[str] = None
+    urgency: Optional[str] = None
+    referral_source: Optional[str] = None
     intake_source: str = "web_form"

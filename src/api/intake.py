@@ -13,11 +13,25 @@ router = APIRouter(prefix="/api/intake", tags=["intake"])
 
 @router.post("/new", response_model=dict)
 async def new_intake(request: IntakeRequest):
+    # Map form urgency to case urgency
+    urgency_map = {
+        "within_week": "emergency",
+        "within_month": "time_sensitive",
+        "no_deadline": "standard",
+        "unsure": "standard",
+    }
+    entities: dict = {}
+    if request.referral_source:
+        entities["referral_source"] = request.referral_source
+
     case = Case(
         client_name=request.client_name,
         client_email=request.client_email,
         client_phone=request.client_phone,
         raw_intake_text=request.description,
+        case_type=request.matter_type,
+        urgency=urgency_map.get(request.urgency or "", None),
+        key_entities=entities,
         intake_source=request.intake_source,
     )
     await create_case(case)
