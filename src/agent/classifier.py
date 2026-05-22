@@ -16,7 +16,7 @@ async def classify_intake(raw_text: str) -> ClassificationResult:
     system_prompt = _PROMPT_PATH.read_text()
 
     response = await _client.messages.create(
-        model="claude-3-5-haiku-latest",  # Fast + high rate limits for structured extraction
+        model="claude-sonnet-4-6",
         max_tokens=1024,
         system=system_prompt,
         messages=[
