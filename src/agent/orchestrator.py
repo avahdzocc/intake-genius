@@ -133,7 +133,15 @@ class IntakeAgent:
 
         if conflict_result["status"] == "CONFLICT_FLAGGED":
             self.case.status = CaseStatus.CONFLICT_FLAGGED
-            reasoning = "Conflict detected — flagging for human review"
+            # Build an explanation from the matched parties
+            details = []
+            for m in conflict_result.get("matches", []):
+                detail = f"{m.get('new_party', '?')} ↔ {m.get('existing_party', '?')} (similarity {m.get('similarity_score', 0):.0%})"
+                eval_info = m.get("evaluation", {})
+                if eval_info.get("explanation"):
+                    detail += f" — {eval_info['explanation']}"
+                details.append(detail)
+            reasoning = "Conflict detected — flagging for human review. " + "; ".join(details) if details else "Conflict detected — flagging for human review"
         else:
             reasoning = "No conflicts found"
 

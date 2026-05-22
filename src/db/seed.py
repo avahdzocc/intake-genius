@@ -278,7 +278,7 @@ DEMO_AUDIT_LOG = [
 
     # Jane Martinez — conflict flagged
     {"id": "al000030", "case_id": "c0000000-0000-0000-0000-000000000004", "timestamp": "2026-05-14T03:59:31", "agent_observation": "status=NEW, raw intake present", "agent_reasoning": "Classified: personal_injury | standard | CA | moderate", "action_taken": "status=CLASSIFYING", "action_result": "advance to CLASSIFYING"},
-    {"id": "al000031", "case_id": "c0000000-0000-0000-0000-000000000004", "timestamp": "2026-05-14T03:59:40", "agent_observation": "conflict check", "agent_reasoning": "Conflict detected — flagging for human review", "action_taken": "status=CONFLICT_FLAGGED", "action_result": "CONFLICT_FLAGGED"},
+    {"id": "al000031", "case_id": "c0000000-0000-0000-0000-000000000004", "timestamp": "2026-05-14T03:59:40", "agent_observation": "conflict check", "agent_reasoning": "Conflict detected — flagging for human review. Jane Martinez ↔ Janet Martinez (similarity 91%) — Same surname, similar first name; new case involves the same grocery store chain that is an existing client in case C0000001", "action_taken": "status=CONFLICT_FLAGGED", "action_result": "CONFLICT_FLAGGED"},
     {"id": "al000032", "case_id": "c0000000-0000-0000-0000-000000000004", "timestamp": "2026-05-14T03:59:41", "agent_observation": "conflict flagged", "agent_reasoning": "High-priority task created for managing partner — client not contacted", "action_taken": "status=CONFLICT_FLAGGED", "action_result": "CONFLICT_FLAGGED"},
 
     # David Okonkwo — routing
