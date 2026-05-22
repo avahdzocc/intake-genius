@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     database_url: str = "./intake_genius.db"
 
     # Firm
-    firm_name: str = "Your Law Firm"
+    firm_name: str = "Chen, Rivers & Associates"
     intake_email: str = "intake@yourfirm.com"
     managing_partner_email: str = ""    # For conflict escalation
 

@@ -145,12 +145,12 @@
 <body>
   <div style="max-width:560px;margin:0 auto 0;padding:1rem 1rem 0;">
     <div style="background:rgba(20,16,8,0.06);border:1px solid rgba(20,16,8,0.12);border-radius:2px;padding:0.7rem 1rem;font-size:0.78rem;color:#5D5641;line-height:1.5;text-align:center;font-family:'IBM Plex Mono',monospace;letter-spacing:0.02em;">
-      <strong>Portfolio Demo</strong> — Submitted cases are processed by AI, but no real SMS or calendar events are created.
+      <strong>Portfolio Demo</strong> — Try submitting a case. The AI agent will classify it, check for conflicts, and route it to an attorney.
       <a href="/admin/" style="color:#92400e;font-weight:600;text-decoration:underline;margin-left:4px;">View Admin Dashboard &rarr;</a>
     </div>
   </div>
   <div class="card">
-    <p class="firm-name" id="firm-name">Your Law Firm</p>
+    <p class="firm-name" id="firm-name">Chen, Rivers &amp; Associates</p>
     <h1>Request a Free Consultation</h1>
     <p class="sub">Tell us about your situation. We typically respond within one business day.</p>
 
@@ -233,10 +233,12 @@
           statusEl.className = 'success';
           statusEl.innerHTML = `
             <strong>Thank you — we've received your request.</strong><br>
-            One of our attorneys will review your information and contact you shortly.
             Your reference number is <code>${data.case_id.slice(0,8).toUpperCase()}</code>.
+            The AI agent is now processing your case. Redirecting to the admin dashboard&hellip;
+            <br><a href="/admin/" style="color:#4D6A32;font-weight:500;text-decoration:underline;margin-top:4px;display:inline-block;">View Admin Dashboard now &rarr;</a>
           `;
           e.target.reset();
+          setTimeout(() => { window.location.href = '/admin/'; }, 4000);
         } else {
           throw new Error(data.message || data.error || 'Submission failed');
         }
