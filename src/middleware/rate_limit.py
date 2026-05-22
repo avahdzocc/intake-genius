@@ -10,10 +10,20 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-# Paths to rate-limit and their per-IP limits
+# Paths to rate-limit and their per-IP limits: (max_requests, window_seconds)
 _LIMITS: dict[str, tuple[int, int]] = {
-    "/api/intake/new": (10, 60),   # 10 requests per 60 s
+    "/api/intake/new": (10, 60),
+    "/webhooks/twilio/inbound": (30, 60),
+    "/webhooks/twilio/status": (30, 60),
+    "/webhooks/n8n/conflict-resolved": (10, 60),
 }
+
+# Prefix-based limits for groups of endpoints
+_PREFIX_LIMITS: list[tuple[str, int, int]] = [
+    ("/admin/", 60, 60),
+    ("/api/internal/", 30, 60),
+    ("/api/intake/", 20, 60),
+]
 
 
 # Module-level so tests can reset it without access to the middleware instance
@@ -31,10 +41,19 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         path = request.url.path
-        if path not in _LIMITS:
-            return await call_next(request)
 
-        limit, window_seconds = _LIMITS[path]
+        if path in _LIMITS:
+            limit, window_seconds = _LIMITS[path]
+        else:
+            match = next(
+                ((pfx, l, w) for pfx, l, w in _PREFIX_LIMITS if path.startswith(pfx)),
+                None,
+            )
+            if match:
+                _, limit, window_seconds = match
+            else:
+                return await call_next(request)
+
         ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
         bucket = _windows[path][ip]

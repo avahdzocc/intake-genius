@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 # Provide stub env vars so config loads without a real .env during tests
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("TWILIO_ACCOUNT_SID", "ACtest")
-os.environ.setdefault("TWILIO_AUTH_TOKEN", "test-token")
+os.environ.setdefault("TWILIO_AUTH_TOKEN", "")
 os.environ.setdefault("TWILIO_PHONE_NUMBER", "+10000000000")
 os.environ.setdefault("FIRM_NAME", "Test Firm")
 os.environ.setdefault("INTAKE_EMAIL", "test@testfirm.com")

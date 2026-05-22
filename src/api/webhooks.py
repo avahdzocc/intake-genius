@@ -1,9 +1,13 @@
 import asyncio
+import hashlib
+import hmac
 import logging
+from urllib.parse import urlencode
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 
+from src.config import settings
 from src.integrations.twilio_client import parse_inbound
 from src.db.queries import find_case_by_phone
 
@@ -11,10 +15,33 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 
+def _verify_twilio_signature(request: Request, form: dict) -> bool:
+    """Validate the X-Twilio-Signature header to prove the request came from Twilio."""
+    if not settings.twilio_auth_token:
+        return True
+
+    sig = request.headers.get("x-twilio-signature", "")
+    if not sig:
+        return False
+
+    url = str(request.url)
+    sorted_params = urlencode(sorted(form.items()))
+    data = (url + sorted_params).encode("utf-8")
+    import base64
+    expected = base64.b64encode(
+        hmac.new(settings.twilio_auth_token.encode("utf-8"), data, hashlib.sha1).digest()
+    ).decode("utf-8")
+    return hmac.compare_digest(sig, expected)
+
+
 @router.post("/twilio/inbound", response_class=PlainTextResponse)
 async def twilio_inbound(request: Request):
     """Receive inbound SMS from Twilio, route to the matching case's reply handler."""
     form = dict(await request.form())
+
+    if not _verify_twilio_signature(request, form):
+        logger.warning("Twilio signature verification failed")
+        raise HTTPException(status_code=403, detail="Invalid signature")
     parsed = parse_inbound(form)
 
     from_number = parsed["from"]
@@ -59,14 +86,24 @@ async def _process_reply(case_id: str, body: str) -> None:
 async def twilio_status(request: Request):
     """Twilio delivery status callback — log and acknowledge."""
     form = dict(await request.form())
+
+    if not _verify_twilio_signature(request, form):
+        logger.warning("Twilio status signature verification failed")
+        raise HTTPException(status_code=403, detail="Invalid signature")
+
     logger.info("Twilio status: sid=%s status=%s", form.get("MessageSid"), form.get("MessageStatus"))
     return {"ok": True}
 
 
 @router.post("/n8n/conflict-resolved")
-async def conflict_resolved(payload: dict):
+async def conflict_resolved(request: Request, payload: dict):
     """n8n posts here when a managing partner clears or rejects a conflict."""
     from src.agent.orchestrator import run_conflict_resolution
+
+    if settings.internal_api_key:
+        auth = request.headers.get("authorization", "")
+        if auth != f"Bearer {settings.internal_api_key}":
+            raise HTTPException(status_code=401, detail="Authentication required")
 
     case_id = payload.get("case_id")
     cleared = bool(payload.get("cleared", False))

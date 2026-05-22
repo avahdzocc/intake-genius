@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class CaseStatus(str, Enum):
@@ -81,11 +81,22 @@ class Case(BaseModel):
 
 
 class IntakeRequest(BaseModel):
-    client_name: Optional[str] = None
-    client_email: Optional[str] = None
-    client_phone: Optional[str] = None
-    description: str
-    matter_type: Optional[str] = None
-    urgency: Optional[str] = None
-    referral_source: Optional[str] = None
-    intake_source: str = "web_form"
+    client_name: Optional[str] = Field(None, max_length=200)
+    client_email: Optional[EmailStr] = None
+    client_phone: Optional[str] = Field(None, max_length=30)
+    description: str = Field(..., min_length=10, max_length=5000)
+    matter_type: Optional[str] = Field(None, max_length=100)
+    urgency: Optional[str] = Field(None, max_length=50)
+    referral_source: Optional[str] = Field(None, max_length=200)
+    intake_source: str = Field("web_form", max_length=50)
+
+    @field_validator("client_phone")
+    @classmethod
+    def validate_phone(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        import re
+        cleaned = re.sub(r"[\s\-\(\)\.]+", "", v)
+        if not re.fullmatch(r"\+?\d{7,15}", cleaned):
+            raise ValueError("Invalid phone number format")
+        return v

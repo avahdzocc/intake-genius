@@ -16,6 +16,7 @@ from src.api.internal import router as internal_router
 from src.api.admin import router as admin_router
 from src.middleware.security_headers import SecurityHeadersMiddleware
 from src.middleware.rate_limit import RateLimitMiddleware
+from src.middleware.auth import AuthMiddleware
 
 logger = logging.getLogger(__name__)
 _STATIC_DIR = Path(__file__).parent / "static"
@@ -62,7 +63,10 @@ app = FastAPI(title="Intake Genius", version="0.4.0", lifespan=lifespan)
 # Security headers on every response
 app.add_middleware(SecurityHeadersMiddleware)
 
-# Rate limiting on public endpoints
+# Auth: require Bearer token for internal/admin endpoints when INTERNAL_API_KEY is set
+app.add_middleware(AuthMiddleware)
+
+# Rate limiting on public and sensitive endpoints
 app.add_middleware(RateLimitMiddleware)
 
 # CORS: allow the intake form origin and localhost in dev; tighten via env in prod
