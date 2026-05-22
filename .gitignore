@@ -33,3 +33,4 @@ htmlcov/
 
 # n8n data (if running locally)
 n8n-data/
+.claude/

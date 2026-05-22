@@ -4,126 +4,147 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Free Consultation Request</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f4f5f7;
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+      background: #C8C0A8;
+      color: #0A0805;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 2rem 1rem;
+      font-size: 14px;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
     }
 
     .card {
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-      padding: 2.5rem 2rem;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 3.5rem 3.5rem 3rem;
       width: 100%;
-      max-width: 560px;
+      max-width: 620px;
     }
 
     .firm-name {
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: #6b7280;
-      margin-bottom: 0.4rem;
+      color: #847D65;
+      margin-bottom: 2rem;
     }
 
     h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 0.5rem;
+      font-size: 52px;
+      font-weight: 400;
+      color: #0A0805;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
     }
 
     .sub {
-      color: #6b7280;
-      font-size: 0.95rem;
-      margin-bottom: 2rem;
-      line-height: 1.5;
+      color: #847D65;
+      font-size: 14px;
+      font-weight: 400;
+      margin-bottom: 3rem;
+      line-height: 1.6;
     }
 
-    .field {
-      margin-bottom: 1.25rem;
-    }
+    .field { margin-bottom: 1.5rem; }
 
     label {
       display: block;
-      font-size: 0.875rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
       font-weight: 500;
-      color: #374151;
-      margin-bottom: 0.35rem;
+      color: #5D5641;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
     }
 
-    label .req { color: #dc2626; margin-left: 2px; }
+    label .req { color: #8B3A26; margin-left: 2px; }
 
     input, textarea, select {
       width: 100%;
-      padding: 0.6rem 0.85rem;
-      border: 1.5px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 1rem;
-      color: #111827;
+      padding: 0.6rem 0;
+      border: none;
+      border-bottom: 1px solid rgba(20, 16, 8, 0.18);
+      border-radius: 0;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      color: #0A0805;
       transition: border-color 0.15s;
       outline: none;
-      background: #fff;
+      background: transparent;
     }
 
     input:focus, textarea:focus, select:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+      border-bottom-color: #0A0805;
+      box-shadow: none;
     }
 
-    textarea { resize: vertical; min-height: 130px; }
+    input::placeholder, textarea::placeholder { color: #847D65; }
 
-    .row { display: flex; gap: 1rem; }
+    textarea { resize: vertical; min-height: 120px; border: 1px solid rgba(20, 16, 8, 0.1); padding: 0.75rem; }
+    textarea:focus { border-color: rgba(20, 16, 8, 0.25); }
+
+    .row { display: flex; gap: 1.5rem; }
     .row .field { flex: 1; }
 
     .opt-in {
-      font-size: 0.8rem;
-      color: #6b7280;
-      line-height: 1.5;
+      font-size: 12px;
+      color: #847D65;
+      line-height: 1.55;
       margin-bottom: 1.5rem;
     }
 
     button[type="submit"] {
       width: 100%;
-      padding: 0.8rem;
-      background: #2563eb;
+      padding: 16px;
+      background: #0A0805;
       color: #fff;
-      font-size: 1rem;
-      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
       border: none;
-      border-radius: 8px;
+      border-radius: 0;
       cursor: pointer;
       transition: background 0.15s;
+      letter-spacing: 0.01em;
     }
 
-    button[type="submit"]:hover { background: #1d4ed8; }
-    button[type="submit"]:disabled { background: #93c5fd; cursor: not-allowed; }
+    button[type="submit"]:hover { background: #1F1C14; }
+    button[type="submit"]:disabled { background: #847D65; cursor: not-allowed; }
 
     #status {
       display: none;
       margin-top: 1.25rem;
       padding: 1rem;
-      border-radius: 8px;
-      font-size: 0.95rem;
+      border-radius: 0;
+      font-size: 14px;
       line-height: 1.5;
     }
 
-    #status.success { background: #ecfdf5; color: #065f46; border: 1.5px solid #6ee7b7; }
-    #status.error   { background: #fef2f2; color: #991b1b; border: 1.5px solid #fca5a5; }
+    #status.success { background: rgba(77, 106, 50, 0.1); color: #4D6A32; border: 1px solid rgba(77, 106, 50, 0.2); }
+    #status.error   { background: rgba(139, 58, 38, 0.08); color: #8B3A26; border: 1px solid rgba(139, 58, 38, 0.15); }
   </style>
 </head>
 <body>
   <div style="max-width:560px;margin:0 auto 0;padding:1rem 1rem 0;">
-    <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:8px;padding:0.7rem 1rem;font-size:0.82rem;color:#92400e;line-height:1.5;text-align:center;">
+    <div style="background:rgba(20,16,8,0.06);border:1px solid rgba(20,16,8,0.12);border-radius:2px;padding:0.7rem 1rem;font-size:0.78rem;color:#5D5641;line-height:1.5;text-align:center;font-family:'IBM Plex Mono',monospace;letter-spacing:0.02em;">
       <strong>Portfolio Demo</strong> — Submitted cases are processed by AI, but no real SMS or calendar events are created.
       <a href="/admin/" style="color:#92400e;font-weight:600;text-decoration:underline;margin-left:4px;">View Admin Dashboard &rarr;</a>
     </div>
