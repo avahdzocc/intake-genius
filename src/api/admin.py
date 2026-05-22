@@ -20,7 +20,7 @@ async def admin_dashboard():
     html = _STATIC_DIR / "admin.html"
     if not html.exists():
         raise HTTPException(status_code=404, detail="Admin UI not found")
-    return FileResponse(str(html))
+    return FileResponse(str(html), headers={"Cache-Control": "no-cache"})
 
 
 @router.get("/api/cases")

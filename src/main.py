@@ -91,10 +91,10 @@ if _STATIC_DIR.exists():
 async def root():
     form = _STATIC_DIR / "intake-form.html"
     if form.exists():
-        return FileResponse(str(form))
+        return FileResponse(str(form), headers={"Cache-Control": "no-cache"})
     return {"name": "Intake Genius", "status": "running"}
 
 
 @app.get("/form", include_in_schema=False)
 async def intake_form():
-    return FileResponse(str(_STATIC_DIR / "intake-form.html"))
+    return FileResponse(str(_STATIC_DIR / "intake-form.html"), headers={"Cache-Control": "no-cache"})
